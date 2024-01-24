@@ -7,12 +7,27 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const registerCommands = () => {
 		const editor = vscode.window.activeTextEditor;
+
 		const generalInfo = vscode.commands.registerCommand('component-health.generalCount', () => {
+			const worspaceConfig = vscode.workspace.getConfiguration("componentHealth");
+
+			const functionConfig = {
+				useEffect: worspaceConfig.get("enableUseEffectView"),
+				useState: worspaceConfig.get("enableUseStateView"),
+				functionalComponent: worspaceConfig.get("enablefunctionalComponentsView"),
+			};
+
+
 			if (editor) {
 				const text = editor.document.getText();
 				let message = '';
 
 				functionInfos.forEach((functionInfo, index) => {
+					const isEnabled = functionConfig[functionInfo.name];
+					if (!isEnabled) {
+						return;
+					}
+
 					const hookCount = countFunctionDeclarations(text, functionInfo.name);
 					message += `${functionInfo.message} ${hookCount}`;
 					if (index < functionInfos.length - 1) {
@@ -20,7 +35,9 @@ export function activate(context: vscode.ExtensionContext) {
 					}
 				});
 
-				message += ` | Code lines: ${getLines(text)}`;
+				if (worspaceConfig.get("enableLinesOfCodeView")) {
+					message += ` | Code lines: ${getLines(text)}`;
+				}
 
 				vscode.window.showInformationMessage(message);
 			} else {

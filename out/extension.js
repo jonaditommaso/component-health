@@ -32,17 +32,29 @@ function activate(context) {
     const registerCommands = () => {
         const editor = vscode.window.activeTextEditor;
         const generalInfo = vscode.commands.registerCommand('component-health.generalCount', () => {
+            const worspaceConfig = vscode.workspace.getConfiguration("componentHealth");
+            const functionConfig = {
+                useEffect: worspaceConfig.get("enableUseEffectView"),
+                useState: worspaceConfig.get("enableUseStateView"),
+                functionalComponent: worspaceConfig.get("enablefunctionalComponentsView"),
+            };
             if (editor) {
                 const text = editor.document.getText();
                 let message = '';
                 functionsInfo_1.functionInfos.forEach((functionInfo, index) => {
+                    const isEnabled = functionConfig[functionInfo.name];
+                    if (!isEnabled) {
+                        return;
+                    }
                     const hookCount = (0, count_1.countFunctionDeclarations)(text, functionInfo.name);
                     message += `${functionInfo.message} ${hookCount}`;
                     if (index < functionsInfo_1.functionInfos.length - 1) {
                         message += ' | ';
                     }
                 });
-                message += ` | Code lines: ${(0, getLines_1.getLines)(text)}`;
+                if (worspaceConfig.get("enableLinesOfCodeView")) {
+                    message += ` | Code lines: ${(0, getLines_1.getLines)(text)}`;
+                }
                 vscode.window.showInformationMessage(message);
             }
             else {

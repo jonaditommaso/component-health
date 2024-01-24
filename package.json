@@ -69,7 +69,35 @@
           }
         }
       ]
-    }
+    },
+    "configuration":[
+      {
+        "type": "object",
+        "title": "Component health",
+        "properties": {
+          "componentHealth.enableUseEffectView": {
+            "type": "boolean",
+            "default": true,
+            "description": "Add counted useEffect to general command"
+          },
+          "componentHealth.enableUseStateView": {
+            "type": "boolean",
+            "default": true,
+            "description": "Add counted useState to general command"
+          },
+          "componentHealth.enablefunctionalComponentsView": {
+            "type": "boolean",
+            "default": true,
+            "description": "Add counted functional components to general command"
+          },
+          "componentHealth.enableLinesOfCodeView": {
+            "type": "boolean",
+            "default": true,
+            "description": "Add counted lines of code to general command"
+          }
+        }
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
