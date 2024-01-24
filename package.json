@@ -16,7 +16,7 @@
     "commands": [
       {
         "command": "component-health.countHook",
-        "title": "Count hook",
+        "title": "Count hooks",
         "icon": {
           "light": "./assets/heart-black.png",
           "dark": "./assets/heart-white.png"

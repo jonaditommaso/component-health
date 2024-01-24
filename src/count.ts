@@ -1,17 +1,19 @@
-import * as ts from 'typescript';
+import { REGEX } from './utils/regex';
+import { FunctionAccepted } from './types/functionAccepted';
+import { getSourceFile } from './getSourceFile';
 
-export function countFunctionDeclarations(text: string, functionName: string): number {
-    const sourceFile = ts.createSourceFile('temp.ts', text, ts.ScriptTarget.Latest, true);
+export function countFunctionDeclarations(text: string, functionName: FunctionAccepted): number {
 
     let functionCount = 0;
+    const textContent = getSourceFile(text);
 
-    function count(text: string): number {
-        const regex = /(?<!\bimport\s.*{[^}]*\b)useEffect\b(?![^}]*\b\})/g;
-        const matches = text.match(regex);
-        return matches ? matches.length : 0;
-    }
+    const lines = textContent.split('\n');
+    const nonCommentedLines = lines.filter(line => !line.trim().startsWith('//'));
+    const codeWithoutComments = nonCommentedLines.join('\n');
 
-    functionCount = count(sourceFile.text);
+    const regex = REGEX[functionName];
+    const matches = codeWithoutComments.match(regex);
+    functionCount = matches ? matches.length : 0;
 
     return functionCount;
 }

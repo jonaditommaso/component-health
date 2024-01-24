@@ -26,19 +26,32 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deactivate = exports.activate = void 0;
 const vscode = __importStar(require("vscode"));
 const count_1 = require("./count");
+const functionsInfo_1 = require("./utils/functionsInfo");
+const getLines_1 = require("./getLines");
 function activate(context) {
-    let countHookDisposable = vscode.commands.registerCommand('component-health.countHook', () => {
-        const editor = vscode.window.activeTextEditor;
-        if (editor) {
-            const text = editor.document.getText();
-            const hookCount = (0, count_1.countFunctionDeclarations)(text, 'useEffect');
-            vscode.window.showInformationMessage(`UseEffect hooks: ${hookCount}`);
-        }
-        else {
-            vscode.window.showInformationMessage('Open a valid file to count UseEffect hooks');
-        }
-    });
-    context.subscriptions.push(countHookDisposable);
+    const registerCommand = () => {
+        const disposable = vscode.commands.registerCommand(`component-health.countHook`, () => {
+            const editor = vscode.window.activeTextEditor;
+            if (editor) {
+                const text = editor.document.getText();
+                let message = '';
+                functionsInfo_1.functionInfos.forEach((functionInfo, index) => {
+                    const hookCount = (0, count_1.countFunctionDeclarations)(text, functionInfo.name);
+                    message += `${functionInfo.message} ${hookCount}`;
+                    if (index < functionsInfo_1.functionInfos.length - 1) {
+                        message += ' | ';
+                    }
+                });
+                message += ` | Code lines: ${(0, getLines_1.getLines)(text)}`;
+                vscode.window.showInformationMessage(message);
+            }
+            else {
+                vscode.window.showInformationMessage('Open a valid file to count hooks');
+            }
+        });
+        context.subscriptions.push(disposable);
+    };
+    registerCommand();
 }
 exports.activate = activate;
 // This method is called when your extension is deactivated
