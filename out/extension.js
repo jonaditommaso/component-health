@@ -29,9 +29,9 @@ const count_1 = require("./count");
 const functionsInfo_1 = require("./utils/functionsInfo");
 const getLines_1 = require("./getLines");
 function activate(context) {
-    const registerCommand = () => {
-        const disposable = vscode.commands.registerCommand(`component-health.countHook`, () => {
-            const editor = vscode.window.activeTextEditor;
+    const registerCommands = () => {
+        const editor = vscode.window.activeTextEditor;
+        const generalInfo = vscode.commands.registerCommand('component-health.generalCount', () => {
             if (editor) {
                 const text = editor.document.getText();
                 let message = '';
@@ -46,12 +46,55 @@ function activate(context) {
                 vscode.window.showInformationMessage(message);
             }
             else {
-                vscode.window.showInformationMessage('Open a valid file to count hooks');
+                vscode.window.showInformationMessage('Open a valid file to count hooks and more');
             }
         });
-        context.subscriptions.push(disposable);
+        const useEffectInfo = vscode.commands.registerCommand('component-health.countUseEffect', () => {
+            if (editor) {
+                const text = editor.document.getText();
+                const useEffectCount = (0, count_1.countFunctionDeclarations)(text, 'useEffect');
+                vscode.window.showInformationMessage(`UseEffect hooks: ${useEffectCount}`);
+            }
+            else {
+                vscode.window.showInformationMessage('Open a valid file to count useEffect');
+            }
+        });
+        const useStateInfo = vscode.commands.registerCommand('component-health.countUseState', () => {
+            if (editor) {
+                const text = editor.document.getText();
+                const useStateCount = (0, count_1.countFunctionDeclarations)(text, 'useState');
+                vscode.window.showInformationMessage(`useState hooks: ${useStateCount}`);
+            }
+            else {
+                vscode.window.showInformationMessage('Open a valid file to count useState');
+            }
+        });
+        const componentsInfo = vscode.commands.registerCommand('component-health.countComponents', () => {
+            if (editor) {
+                const text = editor.document.getText();
+                const componentsCount = (0, count_1.countFunctionDeclarations)(text, 'functionalComponent');
+                vscode.window.showInformationMessage(`Functional components in this file: ${componentsCount}`);
+            }
+            else {
+                vscode.window.showInformationMessage('Open a React file to count components');
+            }
+        });
+        const linesInfo = vscode.commands.registerCommand('component-health.countLines', () => {
+            if (editor) {
+                const text = editor.document.getText();
+                vscode.window.showInformationMessage(`Lines of code: ${(0, getLines_1.getLines)(text)}`);
+            }
+            else {
+                vscode.window.showInformationMessage('Open a valid file to count lines of code');
+            }
+        });
+        context.subscriptions.push(generalInfo);
+        context.subscriptions.push(useEffectInfo);
+        context.subscriptions.push(useStateInfo);
+        context.subscriptions.push(linesInfo);
+        context.subscriptions.push(componentsInfo);
     };
-    registerCommand();
+    registerCommands();
 }
 exports.activate = activate;
 // This method is called when your extension is deactivated

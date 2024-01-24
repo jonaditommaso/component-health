@@ -15,12 +15,28 @@
   "contributes": {
     "commands": [
       {
-        "command": "component-health.countHook",
-        "title": "Count hooks",
+        "command": "component-health.generalCount",
+        "title": "General count",
         "icon": {
           "light": "./assets/heart-black.png",
           "dark": "./assets/heart-white.png"
         }
+      },
+      {
+        "command": "component-health.countUseEffect",
+        "title": "Count useEffect"
+      },
+      {
+        "command": "component-health.countUseState",
+        "title": "Count useState"
+      },
+      {
+        "command": "component-health.countComponents",
+        "title": "Count functional components"
+      },
+      {
+        "command": "component-health.countLines",
+        "title": "Count lines of code"
       }
     ],
     "languages": [
@@ -45,7 +61,7 @@
     "menus": {
       "editor/title": [
         {
-          "command": "component-health.countHook",
+          "command": "component-health.generalCount",
           "group": "navigation",
           "icon": {
             "light": "./assets/heart-black.png",
