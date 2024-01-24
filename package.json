@@ -17,6 +17,7 @@
       {
         "command": "component-health.generalCount",
         "title": "General count",
+        "when": "editorLangId == javascript || editorLangId == typescript",
         "icon": {
           "light": "./assets/heart-black.png",
           "dark": "./assets/heart-white.png"
@@ -63,6 +64,7 @@
         {
           "command": "component-health.generalCount",
           "group": "navigation",
+          "when": "editorLangId == javascript || editorLangId == typescript",
           "icon": {
             "light": "./assets/heart-black.png",
             "dark": "./assets/heart-white.png"
