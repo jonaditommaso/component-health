@@ -109,6 +109,11 @@
     "lint": "eslint src --ext ts",
     "test": "vscode-test"
   },
+  "capabilities": {
+    "codeLensProvider" : {
+      "resolveProvider": "true"
+    }
+  },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",

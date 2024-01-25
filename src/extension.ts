@@ -3,7 +3,37 @@ import { countFunctionDeclarations } from './count';
 import { functionInfos } from './utils/functionsInfo';
 import { getLines } from './getLines';
 
+class MyCodeLensProvider implements vscode.CodeLensProvider {
+	private registration: vscode.Disposable | undefined;
+
+	constructor(private readonly message: string) {}
+
+    provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.CodeLens[] {
+        const position = new vscode.Position(0, 0);
+        const range = new vscode.Range(position, position);
+
+        const codeLens = new vscode.CodeLens(range, {
+            title: this.message,
+            command: '',
+        });
+
+        return [codeLens];
+    }
+
+	register(language: string) {
+        this.registration = vscode.languages.registerCodeLensProvider({ scheme: 'file', language }, this);
+    }
+
+    unregister() {
+        if (this.registration) {
+            this.registration.dispose();
+			this.registration = undefined;
+        }
+    }
+}
+
 export function activate(context: vscode.ExtensionContext) {
+	let activeCodeLensProvider: MyCodeLensProvider | undefined;
 
 	const registerCommands = () => {
 		const editor = vscode.window.activeTextEditor;
@@ -39,9 +69,29 @@ export function activate(context: vscode.ExtensionContext) {
 					message += ` | Code lines: ${getLines(text)}`;
 				}
 
-				vscode.window.showInformationMessage(message);
+				if (activeCodeLensProvider) {
+					activeCodeLensProvider.unregister();
+				}
+
+				// Crear una instancia de MyCodeLensProvider con el mensaje actual
+				const codeLensProvider = new MyCodeLensProvider(message);
+
+				// Registrar el proveedor para TypeScript (.ts) y JavaScript (.js) del documento actual
+				codeLensProvider.register(editor.document.languageId);
+
+				// Almacenar el proveedor activo para que se pueda liberar posteriormente
+				activeCodeLensProvider = codeLensProvider;
 			} else {
 				vscode.window.showInformationMessage('Open a valid file to count hooks and more');
+			}
+		});
+
+		const editorChangeListener = vscode.window.onDidChangeActiveTextEditor((editor) => {
+			if (!editor) {
+				if (activeCodeLensProvider) {
+					activeCodeLensProvider.unregister();
+					activeCodeLensProvider = undefined;
+				}
 			}
 		});
 
@@ -84,7 +134,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		});
 
-		context.subscriptions.push(generalInfo);
+		context.subscriptions.push(generalInfo, editorChangeListener);
 		context.subscriptions.push(useEffectInfo);
 		context.subscriptions.push(useStateInfo);
 		context.subscriptions.push(linesInfo);
