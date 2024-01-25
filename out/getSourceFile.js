@@ -25,8 +25,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getSourceFile = void 0;
 const ts = __importStar(require("typescript"));
-const getSourceFile = (editorDocumentText) => {
-    const sourceFile = ts.createSourceFile('temp.ts', editorDocumentText, ts.ScriptTarget.Latest, true);
+const getSourceFile = (editorDocumentText, fileName) => {
+    const sourceFile = ts.createSourceFile(fileName, editorDocumentText, ts.ScriptTarget.Latest, true);
     return sourceFile.text;
 };
 exports.getSourceFile = getSourceFile;

@@ -56,8 +56,8 @@ class MyCodeLensProvider {
 function activate(context) {
     let activeCodeLensProvider;
     const registerCommands = () => {
-        const editor = vscode.window.activeTextEditor;
         const generalInfo = vscode.commands.registerCommand('component-health.generalCount', () => {
+            const editor = vscode.window.activeTextEditor;
             const worspaceConfig = vscode.workspace.getConfiguration("componentHealth");
             const functionConfig = {
                 useEffect: worspaceConfig.get("enableUseEffectView"),
@@ -66,20 +66,21 @@ function activate(context) {
             };
             if (editor) {
                 const text = editor.document.getText();
+                const fileName = editor.document.fileName;
                 let message = '';
                 functionsInfo_1.functionInfos.forEach((functionInfo, index) => {
                     const isEnabled = functionConfig[functionInfo.name];
                     if (!isEnabled) {
                         return;
                     }
-                    const hookCount = (0, count_1.countFunctionDeclarations)(text, functionInfo.name);
+                    const hookCount = (0, count_1.countFunctionDeclarations)(text, functionInfo.name, fileName);
                     message += `${functionInfo.message} ${hookCount}`;
                     if (index < functionsInfo_1.functionInfos.length - 1) {
                         message += ' | ';
                     }
                 });
                 if (worspaceConfig.get("enableLinesOfCodeView")) {
-                    message += ` | Code lines: ${(0, getLines_1.getLines)(text)}`;
+                    message += ` | Code lines: ${(0, getLines_1.getLines)(text, fileName)}`;
                 }
                 if (activeCodeLensProvider) {
                     activeCodeLensProvider.unregister();
@@ -103,10 +104,13 @@ function activate(context) {
                 }
             }
         });
+        // TODO: PENDING REFACTOR. SAME STRUCTURE
         const useEffectInfo = vscode.commands.registerCommand('component-health.countUseEffect', () => {
+            const editor = vscode.window.activeTextEditor;
             if (editor) {
                 const text = editor.document.getText();
-                const useEffectCount = (0, count_1.countFunctionDeclarations)(text, 'useEffect');
+                const fileName = editor.document.fileName;
+                const useEffectCount = (0, count_1.countFunctionDeclarations)(text, 'useEffect', fileName);
                 vscode.window.showInformationMessage(`UseEffect hooks: ${useEffectCount}`);
             }
             else {
@@ -114,9 +118,11 @@ function activate(context) {
             }
         });
         const useStateInfo = vscode.commands.registerCommand('component-health.countUseState', () => {
+            const editor = vscode.window.activeTextEditor;
             if (editor) {
                 const text = editor.document.getText();
-                const useStateCount = (0, count_1.countFunctionDeclarations)(text, 'useState');
+                const fileName = editor.document.fileName;
+                const useStateCount = (0, count_1.countFunctionDeclarations)(text, 'useState', fileName);
                 vscode.window.showInformationMessage(`useState hooks: ${useStateCount}`);
             }
             else {
@@ -124,9 +130,11 @@ function activate(context) {
             }
         });
         const componentsInfo = vscode.commands.registerCommand('component-health.countComponents', () => {
+            const editor = vscode.window.activeTextEditor;
             if (editor) {
                 const text = editor.document.getText();
-                const componentsCount = (0, count_1.countFunctionDeclarations)(text, 'functionalComponent');
+                const fileName = editor.document.fileName;
+                const componentsCount = (0, count_1.countFunctionDeclarations)(text, 'functionalComponent', fileName);
                 vscode.window.showInformationMessage(`Functional components in this file: ${componentsCount}`);
             }
             else {
@@ -134,9 +142,11 @@ function activate(context) {
             }
         });
         const linesInfo = vscode.commands.registerCommand('component-health.countLines', () => {
+            const editor = vscode.window.activeTextEditor;
             if (editor) {
                 const text = editor.document.getText();
-                vscode.window.showInformationMessage(`Lines of code: ${(0, getLines_1.getLines)(text)}`);
+                const fileName = editor.document.fileName;
+                vscode.window.showInformationMessage(`Lines of code: ${(0, getLines_1.getLines)(text, fileName)}`);
             }
             else {
                 vscode.window.showInformationMessage('Open a valid file to count lines of code');
