@@ -1,6 +1,7 @@
 {
   "name": "component-health",
-  "displayName": "component-health",
+  "displayName": "Component Health",
+  "publisher": "jonaditommaso",
   "description": "",
   "version": "0.0.1",
   "icon": "./assets/heart-filled.png",
