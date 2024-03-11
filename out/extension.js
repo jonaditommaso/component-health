@@ -62,7 +62,7 @@ function activate(context) {
             const functionConfig = {
                 useEffect: worspaceConfig.get("enableUseEffectView"),
                 useState: worspaceConfig.get("enableUseStateView"),
-                functionalComponent: worspaceConfig.get("enablefunctionalComponentsView"),
+                functionalComponent: worspaceConfig.get("enableFunctionalComponentsView"),
             };
             if (editor) {
                 const text = editor.document.getText();
