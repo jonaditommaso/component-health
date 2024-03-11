@@ -4,7 +4,7 @@
   "publisher": "jonaditommaso",
   "description": "",
   "version": "0.0.1",
-  "icon": "assets/heart-filled.png",
+  "icon": "https://github.com/jonaditommaso/component-health/blob/main/assets/heart-white.png?raw=true",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -20,8 +20,8 @@
         "title": "General count",
         "when": "editorLangId == javascript || editorLangId == typescript",
         "icon": {
-          "light": "assets/heart-black.png",
-          "dark": "assets/heart-white.png"
+          "light": "https://github.com/jonaditommaso/component-health/blob/main/assets/heart-black.png?raw=true",
+          "dark": "https://github.com/jonaditommaso/component-health/blob/main/assets/heart-white.png?raw=true"
         }
       },
       {
@@ -67,8 +67,8 @@
           "group": "navigation",
           "when": "editorLangId == javascript || editorLangId == typescript",
           "icon": {
-            "light": "assets/heart-black.png",
-            "dark": "assets/heart-white.png"
+            "light": "https://github.com/jonaditommaso/component-health/blob/main/assets/heart-black.png?raw=true",
+            "dark": "https://github.com/jonaditommaso/component-health/blob/main/assets/heart-white.png?raw=true"
           }
         }
       ]
