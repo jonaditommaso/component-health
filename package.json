@@ -87,7 +87,7 @@
             "default": true,
             "description": "Add counted useState to general command"
           },
-          "componentHealth.enablefunctionalComponentsView": {
+          "componentHealth.enableFunctionalComponentsView": {
             "type": "boolean",
             "default": true,
             "description": "Add counted functional components to general command"

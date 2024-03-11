@@ -44,7 +44,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const functionConfig = {
 				useEffect: worspaceConfig.get("enableUseEffectView"),
 				useState: worspaceConfig.get("enableUseStateView"),
-				functionalComponent: worspaceConfig.get("enablefunctionalComponentsView"),
+				functionalComponent: worspaceConfig.get("enableFunctionalComponentsView"),
 			};
 
 
