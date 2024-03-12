@@ -108,12 +108,11 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "npm run clean && tsc -p ./",
+    "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "vscode-test",
-    "clean": "del /S /Q out\\*.ts"
+    "test": "vscode-test"
   },
   "capabilities": {
     "codeLensProvider": {
