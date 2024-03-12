@@ -3,7 +3,7 @@
   "displayName": "Component Health",
   "publisher": "jonaditommaso",
   "description": "",
-  "version": "0.1.14",
+  "version": "0.2.0",
   "icon": "images/heart-white.png",
   "engines": {
     "vscode": "^1.87.0"
