@@ -8,6 +8,5 @@ vsc-extension-quickstart.md
 **/.vscode-test.*
 .vscode
 node_modules
-out/
 src/
 tsconfig.json
