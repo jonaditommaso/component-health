@@ -1,8 +1,7 @@
-import { REGEX } from './utils/regex';
-import { FunctionAccepted } from './types/functionAccepted';
-import { getSourceFile } from './getSourceFile';
+const { REGEX } = require('./utils/regex');
+const { getSourceFile } = require('./getSourceFile');
 
-export function countFunctionDeclarations(text: string, functionName: FunctionAccepted, fileName: string): number {
+function countFunctionDeclarations(text, functionName, fileName) {
 
     let functionCount = 0;
     const textContent = getSourceFile(text, fileName);
@@ -16,4 +15,8 @@ export function countFunctionDeclarations(text: string, functionName: FunctionAc
     functionCount = matches ? matches.length : 0;
 
     return functionCount;
+}
+
+module.exports = {
+    countFunctionDeclarations
 }

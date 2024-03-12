@@ -6,7 +6,7 @@
   "version": "0.1.14",
   "icon": "images/heart-white.png",
   "engines": {
-    "vscode": "^1.87.1"
+    "vscode": "^1.87.0"
   },
   "repository": {
     "type": "git",
@@ -15,14 +15,8 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:component-health.generalCount",
-    "onCommand:component-health.countUseEffect",
-    "onCommand:component-health.countUseState",
-    "onCommand:component-health.countComponents",
-    "onCommand:component-health.countLines"
-  ],
-  "main": "./out/extension.js",
+  "activationEvents": [],
+  "main": "./extension.js",
   "contributes": {
     "commands": [
       {
@@ -113,11 +107,8 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
+    "lint": "eslint .",
+    "pretest": "npm run lint",
     "test": "vscode-test"
   },
   "capabilities": {
@@ -126,15 +117,12 @@
     }
   },
   "devDependencies": {
+    "@types/vscode": "^1.87.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
-    "@types/vscode": "^1.87.0",
-    "@typescript-eslint/eslint-plugin": "^6.15.0",
-    "@typescript-eslint/parser": "^6.15.0",
-    "@vscode/test-cli": "^0.0.4",
-    "@vscode/test-electron": "^2.3.8",
     "eslint": "^8.56.0",
-    "ts-loader": "^9.5.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "@vscode/test-cli": "^0.0.4",
+    "@vscode/test-electron": "^2.3.8"
   }
 }

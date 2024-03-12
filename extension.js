@@ -1,14 +1,15 @@
-import * as vscode from 'vscode';
-import { countFunctionDeclarations } from './count';
-import { functionInfos } from './utils/functionsInfo';
-import { getLines } from './getLines';
+const vscode = require('vscode');
+const { countFunctionDeclarations } = require('./src/count')
+const { functionInfos } = require('./src/utils/functionsInfo');
+const { getLines } = require('./src/getLines');
 
-class MyCodeLensProvider implements vscode.CodeLensProvider {
-	private registration: vscode.Disposable | undefined;
+class MyCodeLensProvider {
+	constructor(message) {
+        this.message = message;
+        this.registration = undefined;
+    }
 
-	constructor(private readonly message: string) {}
-
-    provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.CodeLens[] {
+    provideCodeLenses(document, token) {
         const position = new vscode.Position(0, 0);
         const range = new vscode.Range(position, position);
 
@@ -20,7 +21,7 @@ class MyCodeLensProvider implements vscode.CodeLensProvider {
         return [codeLens];
     }
 
-	register(language: string) {
+	register(language) {
         this.registration = vscode.languages.registerCodeLensProvider({ scheme: 'file', language }, this);
     }
 
@@ -32,8 +33,8 @@ class MyCodeLensProvider implements vscode.CodeLensProvider {
     }
 }
 
-export function activate(context: vscode.ExtensionContext) {
-	let activeCodeLensProvider: MyCodeLensProvider | undefined;
+function activate(context) {
+	let activeCodeLensProvider;
 
 	const registerCommands = () => {
 
@@ -160,4 +161,9 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+function deactivate() {}
+
+module.exports = {
+	activate,
+	deactivate
+}

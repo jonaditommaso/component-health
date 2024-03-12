@@ -1,1 +1,0 @@
-export type FunctionAccepted = 'useEffect' | 'useState' | 'functionalComponent';
