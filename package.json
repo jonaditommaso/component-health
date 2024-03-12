@@ -73,7 +73,7 @@
         }
       ]
     },
-    "configuration":[
+    "configuration": [
       {
         "type": "object",
         "title": "Component health",
@@ -104,14 +104,15 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "npm run clean && tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "clean": "del /S /Q out\\*.ts"
   },
   "capabilities": {
-    "codeLensProvider" : {
+    "codeLensProvider": {
       "resolveProvider": "true"
     }
   },
@@ -124,6 +125,7 @@
     "@vscode/test-cli": "^0.0.4",
     "@vscode/test-electron": "^2.3.8",
     "eslint": "^8.56.0",
+    "ts-loader": "^9.5.1",
     "typescript": "^5.3.3"
   }
 }
