@@ -15,7 +15,13 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onCommand:component-health.generalCount",
+    "onCommand:component-health.countUseEffect",
+    "onCommand:component-health.countUseState",
+    "onCommand:component-health.countComponents",
+    "onCommand:component-health.countLines"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
