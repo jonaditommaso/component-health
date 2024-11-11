@@ -60,7 +60,12 @@
           "react",
           "React",
           "typescript",
-          "Typescript"
+          "Typescript",
+          "TypeScript"
+        ],
+        "mimetypes": [
+          "text/javascript",
+          "text/typescriptreact"
         ]
       }
     ],
