@@ -74,7 +74,7 @@
         {
           "command": "component-health.generalCount",
           "group": "navigation",
-          "when": "editorLangId == javascript || editorLangId == typescript",
+          "when": "editorLangId == javascript || editorLangId == typescript || editorLangId == typescriptreact",
           "icon": {
             "light": "images/heart-black.png",
             "dark": "images/heart-white.png"
