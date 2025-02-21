@@ -10,6 +10,6 @@ You just have to press the heart icon
 
 ## Requirements
 
-Only works on Javascript files.
+Only works on Javascript/Typescript files (.js, .jsx, .ts, .tsx).
 
 **Enjoy!**
