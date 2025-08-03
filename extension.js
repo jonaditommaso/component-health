@@ -11,6 +11,18 @@ class MyCodeLensProvider {
         this.registration = undefined;
     }
 
+    // Method to update the message without recreating the provider
+    updateMessage(newMessage) {
+        this.message = newMessage;
+        // Trigger a refresh of the CodeLens
+        if (this.registration && vscode.window.activeTextEditor) {
+            vscode.commands.executeCommand('vscode.executeCodeLensProvider',
+                vscode.window.activeTextEditor.document.uri,
+                vscode.CancellationToken.None
+            );
+        }
+    }
+
     provideCodeLenses(document, token) {
         // Suppress unused parameter warnings
         document;
@@ -76,7 +88,7 @@ function activate(context) {
 			const healthIcon = getHealthIcon(healthScore);
 			tooltip.appendMarkdown(`**Component Health: ${healthScore}% ${healthIcon}**\n\n`);
 			tooltip.appendMarkdown(`---\n\n`); // Divider
-			tooltip.appendMarkdown(`**Configure Metrics:**\n\n`);
+			tooltip.appendMarkdown(`**Choose metrics for CodeLens general view:**\n\n`);
 
 			// Add checkboxes for each metric with simple icons
 			const metrics = [
@@ -163,6 +175,10 @@ function activate(context) {
 				tooltip.appendMarkdown(`${suggestion}\n\n`);
 			});
 
+			// Add information section
+			tooltip.appendMarkdown(`---\n\n`); // Another divider
+			tooltip.appendMarkdown(`ℹ️ [How is the health score calculated?](https://marketplace.visualstudio.com/items?itemName=jonaditommaso.component-health "Learn about our scoring algorithm")\n\n`);
+
 			statusBarItem.tooltip = tooltip;
 			statusBarItem.show();
 		}
@@ -172,6 +188,90 @@ function activate(context) {
 	const hideStatusBar = () => {
 		if (statusBarItem) {
 			statusBarItem.hide();
+		}
+	};
+
+	// Update CodeLens with current metrics
+	const updateCodeLens = (editor, text, fileName, metrics, healthScore) => {
+		const worspaceConfig = vscode.workspace.getConfiguration("componentHealth");
+
+		const functionConfig = {
+			useEffect: worspaceConfig.get("enableUseEffectView"),
+			useState: worspaceConfig.get("enableUseStateView"),
+			functionalComponent: worspaceConfig.get("enableFunctionalComponentsView"),
+			internalFunctions: worspaceConfig.get("enableInternalFunctionsView"),
+			conditionalReturns: worspaceConfig.get("enableConditionalReturnsView"),
+			jsxNesting: worspaceConfig.get("enableJSXNestingView"),
+			customHooks: worspaceConfig.get("enableCustomHooksView"),
+		};
+
+		let message = '';
+		let hasEnabledMetrics = false;
+
+		functionInfos.forEach((functionInfo, index) => {
+			const isEnabled = functionConfig[functionInfo.name];
+			if (!isEnabled) {
+				return;
+			}
+
+			hasEnabledMetrics = true;
+			let hookCount;
+
+			// Use already calculated metrics if available, otherwise calculate
+			if (functionInfo.name === 'useEffect') {
+				hookCount = metrics.useEffectCount;
+			} else if (functionInfo.name === 'useState') {
+				hookCount = metrics.useStateCount;
+			} else if (functionInfo.name === 'functionalComponent') {
+				hookCount = metrics.functionalComponentCount;
+			} else if (functionInfo.name === 'internalFunctions') {
+				hookCount = metrics.internalFunctionsCount;
+			} else if (functionInfo.name === 'conditionalReturns') {
+				hookCount = metrics.conditionalReturnsCount;
+			} else if (functionInfo.name === 'jsxNesting') {
+				hookCount = metrics.jsxNestingDepth;
+			} else if (functionInfo.name === 'customHooks') {
+				hookCount = metrics.customHooksCount;
+			} else {
+				hookCount = countFunctionDeclarations(text, functionInfo.name, fileName);
+			}
+
+			message += `${functionInfo.message} ${hookCount}`;
+			if (index < functionInfos.length - 1) {
+				message += ' | ';
+			}
+		});
+
+		if (worspaceConfig.get("enableLinesOfCodeView")) {
+			const linesOfCode = metrics.linesOfCode;
+			if (hasEnabledMetrics) {
+				message += ` | Code lines: ${linesOfCode}`;
+			} else {
+				message = `Code lines: ${linesOfCode}`;
+			}
+		}
+
+		// Add health score with icon
+		const healthIcon = getHealthIcon(healthScore);
+		const healthStatus = getHealthStatus(healthScore);
+		if (message) {
+			message += ` | Health: ${healthIcon} ${healthScore}% (${healthStatus})`;
+		} else {
+			message = `Health: ${healthIcon} ${healthScore}% (${healthStatus})`;
+		}
+
+		// If provider exists, just update the message, otherwise create new one
+		if (activeCodeLensProvider && activeCodeLensProvider.registration) {
+			activeCodeLensProvider.updateMessage(message);
+		} else {
+			// Create and register new CodeLens provider only if none exists
+			if (activeCodeLensProvider) {
+				activeCodeLensProvider.unregister();
+			}
+
+			const codeLensProvider = new MyCodeLensProvider(message);
+			codeLensProvider.register(editor.document.languageId);
+			activeCodeLensProvider = codeLensProvider;
 		}
 	};
 
@@ -289,24 +389,11 @@ function activate(context) {
 
 		const generalInfo = vscode.commands.registerCommand('component-health.generalCount', () => {
 			const editor = vscode.window.activeTextEditor;
-			const worspaceConfig = vscode.workspace.getConfiguration("componentHealth");
-
-			const functionConfig = {
-				useEffect: worspaceConfig.get("enableUseEffectView"),
-				useState: worspaceConfig.get("enableUseStateView"),
-				functionalComponent: worspaceConfig.get("enableFunctionalComponentsView"),
-				internalFunctions: worspaceConfig.get("enableInternalFunctionsView"),
-				conditionalReturns: worspaceConfig.get("enableConditionalReturnsView"),
-				jsxNesting: worspaceConfig.get("enableJSXNestingView"),
-				customHooks: worspaceConfig.get("enableCustomHooksView"),
-			};
-
 
 			if (editor) {
 				const text = editor.document.getText();
 				const fileName = editor.document.fileName;
 
-				let message = '';
 				const metrics = {
 					linesOfCode: 0,
 					useEffectCount: 0,
@@ -318,62 +405,22 @@ function activate(context) {
 					customHooksCount: 0
 				};
 
-				functionInfos.forEach((functionInfo, index) => {
-					const isEnabled = functionConfig[functionInfo.name];
-					if (!isEnabled) {
-						return;
-					}
+				// Calculate all metrics
+				metrics.useEffectCount = countFunctionDeclarations(text, 'useEffect', fileName);
+				metrics.useStateCount = countFunctionDeclarations(text, 'useState', fileName);
+				metrics.functionalComponentCount = countFunctionDeclarations(text, 'functionalComponent', fileName);
+				metrics.internalFunctionsCount = countFunctionDeclarations(text, 'internalFunctions', fileName);
+				metrics.conditionalReturnsCount = countFunctionDeclarations(text, 'conditionalReturns', fileName);
+				metrics.jsxNestingDepth = countFunctionDeclarations(text, 'jsxNesting', fileName);
+				metrics.customHooksCount = countFunctionDeclarations(text, 'customHooks', fileName);
+				metrics.linesOfCode = getLines(text, fileName);
 
-					const hookCount = countFunctionDeclarations(text, functionInfo.name, fileName);
-
-					// Store metrics for health calculation
-					if (functionInfo.name === 'useEffect') {
-						metrics.useEffectCount = hookCount;
-					} else if (functionInfo.name === 'useState') {
-						metrics.useStateCount = hookCount;
-					} else if (functionInfo.name === 'functionalComponent') {
-						metrics.functionalComponentCount = hookCount;
-					} else if (functionInfo.name === 'internalFunctions') {
-						metrics.internalFunctionsCount = hookCount;
-					} else if (functionInfo.name === 'conditionalReturns') {
-						metrics.conditionalReturnsCount = hookCount;
-					} else if (functionInfo.name === 'jsxNesting') {
-						metrics.jsxNestingDepth = hookCount;
-					} else if (functionInfo.name === 'customHooks') {
-						metrics.customHooksCount = hookCount;
-					}
-
-					message += `${functionInfo.message} ${hookCount}`;
-					if (index < functionInfos.length - 1) {
-						message += ' | ';
-					}
-				});				if (worspaceConfig.get("enableLinesOfCodeView")) {
-					const linesOfCode = getLines(text, fileName);
-					metrics.linesOfCode = linesOfCode;
-					message += ` | Code lines: ${linesOfCode}`;
-				}
-
-				// Calculate and add health score with icon
+				// Calculate health score
 				const healthScore = calculateHealth(metrics);
-				const healthIcon = getHealthIcon(healthScore);
-				const healthStatus = getHealthStatus(healthScore);
-				message += ` | Health: ${healthIcon} ${healthScore}% (${healthStatus})`;
 
-				if (activeCodeLensProvider) {
-					activeCodeLensProvider.unregister();
-				}
-
-				// Crear una instancia de MyCodeLensProvider con el mensaje actual
-				const codeLensProvider = new MyCodeLensProvider(message);
-
-				// Registrar el proveedor para TypeScript (.ts) y JavaScript (.js) del documento actual
-				codeLensProvider.register(editor.document.languageId);
-
-				// Almacenar el proveedor activo para que se pueda liberar posteriormente
-				activeCodeLensProvider = codeLensProvider;
-
-				// Update status bar with health score
+				// Update both status bar and CodeLens
 				updateStatusBar(healthScore);
+				updateCodeLens(editor, text, fileName, metrics, healthScore);
 			} else {
 				vscode.window.showInformationMessage('Open a valid file to count hooks and more');
 				hideStatusBar();
@@ -418,6 +465,9 @@ function activate(context) {
 
 					const healthScore = calculateHealth(metrics);
 					updateStatusBar(healthScore);
+
+					// Also update CodeLens automatically
+					updateCodeLens(editor, text, fileName, metrics, healthScore);
 				} else {
 					hideStatusBar();
 				}
@@ -456,6 +506,9 @@ function activate(context) {
 
 					const healthScore = calculateHealth(metrics);
 					updateStatusBar(healthScore);
+
+					// Also update CodeLens automatically
+					updateCodeLens(editor, text, fileName, metrics, healthScore);
 				}
 			}
 		});
@@ -565,6 +618,10 @@ function activate(context) {
 
 					const healthScore = calculateHealth(metrics);
 					updateStatusBar(healthScore);
+
+					// Also initialize CodeLens
+					updateCodeLens(currentEditor, text, fileName, metrics, healthScore);
+
 					return true; // Successfully initialized
 				}
 			}
@@ -600,6 +657,22 @@ function activate(context) {
 	// Also try when the extension host is fully ready
 	setTimeout(immediateInit, 1000);
 	setTimeout(immediateInit, 2000);
+
+	// Add listener for when a React file is opened later
+	const activeTextEditorListener = vscode.window.onDidChangeActiveTextEditor((editor) => {
+		if (!statusBarItem || !statusBarItem.text) {
+			// Status bar not initialized yet, try to initialize
+			if (editor) {
+				const supportedLanguages = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'];
+				if (supportedLanguages.includes(editor.document.languageId)) {
+					console.log('Component Health: React file opened, initializing status bar');
+					initializeHealthScore();
+				}
+			}
+		}
+	});
+
+	context.subscriptions.push(activeTextEditorListener);
 }
 
 // This method is called when your extension is deactivated
