@@ -3,6 +3,7 @@ const { countFunctionDeclarations } = require('./src/count')
 const { functionInfos } = require('./src/utils/functionsInfo');
 const { getLines } = require('./src/getLines');
 const { calculateHealth } = require('./src/utils/calculateHealth');
+const { getHealthIcon, getHealthStatus } = require('./src/utils/healthIcon');
 
 class MyCodeLensProvider {
 	constructor(message) {
@@ -81,7 +82,7 @@ function activate(context) {
 					}
 
 					const hookCount = countFunctionDeclarations(text, functionInfo.name, fileName);
-					
+
 					// Store metrics for health calculation
 					if (functionInfo.name === 'useEffect') {
 						metrics.useEffectCount = hookCount;
@@ -109,9 +110,11 @@ function activate(context) {
 					message += ` | Code lines: ${linesOfCode}`;
 				}
 
-				// Calculate and add health score
+				// Calculate and add health score with icon
 				const healthScore = calculateHealth(metrics);
-				message += ` | Health: ${healthScore}%`;
+				const healthIcon = getHealthIcon(healthScore);
+				const healthStatus = getHealthStatus(healthScore);
+				message += ` | Health: ${healthIcon} ${healthScore}% (${healthStatus})`;
 
 				if (activeCodeLensProvider) {
 					activeCodeLensProvider.unregister();
