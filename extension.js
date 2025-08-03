@@ -2,6 +2,7 @@ const vscode = require('vscode');
 const { countFunctionDeclarations } = require('./src/count')
 const { functionInfos } = require('./src/utils/functionsInfo');
 const { getLines } = require('./src/getLines');
+const { calculateHealth } = require('./src/utils/calculateHealth');
 
 class MyCodeLensProvider {
 	constructor(message) {
@@ -10,6 +11,10 @@ class MyCodeLensProvider {
     }
 
     provideCodeLenses(document, token) {
+        // Suppress unused parameter warnings
+        document;
+        token;
+
         const position = new vscode.Position(0, 0);
         const range = new vscode.Range(position, position);
 
@@ -54,6 +59,12 @@ function activate(context) {
 				const fileName = editor.document.fileName;
 
 				let message = '';
+				const metrics = {
+					linesOfCode: 0,
+					useEffectCount: 0,
+					useStateCount: 0,
+					functionalComponentCount: 0
+				};
 
 				functionInfos.forEach((functionInfo, index) => {
 					const isEnabled = functionConfig[functionInfo.name];
@@ -62,6 +73,16 @@ function activate(context) {
 					}
 
 					const hookCount = countFunctionDeclarations(text, functionInfo.name, fileName);
+
+					// Store metrics for health calculation
+					if (functionInfo.name === 'useEffect') {
+						metrics.useEffectCount = hookCount;
+					} else if (functionInfo.name === 'useState') {
+						metrics.useStateCount = hookCount;
+					} else if (functionInfo.name === 'functionalComponent') {
+						metrics.functionalComponentCount = hookCount;
+					}
+
 					message += `${functionInfo.message} ${hookCount}`;
 					if (index < functionInfos.length - 1) {
 						message += ' | ';
@@ -69,8 +90,14 @@ function activate(context) {
 				});
 
 				if (worspaceConfig.get("enableLinesOfCodeView")) {
-					message += ` | Code lines: ${getLines(text, fileName)}`;
+					const linesOfCode = getLines(text, fileName);
+					metrics.linesOfCode = linesOfCode;
+					message += ` | Code lines: ${linesOfCode}`;
 				}
+
+				// Calculate and add health score
+				const healthScore = calculateHealth(metrics);
+				message += ` | Health: ${healthScore}%`;
 
 				if (activeCodeLensProvider) {
 					activeCodeLensProvider.unregister();
