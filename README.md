@@ -1,6 +1,6 @@
 # Component Health
 
-[![Version](https://img.shields.io/badge/version-0.2.3-blue.svg)](https://marketplace.visualstudio.com/items?itemName=jonaditommaso.component-health)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://marketplace.visualstudio.com/items?itemName=jonaditommaso.component-health)
 
 **Component Health** is a powerful VS Code extension that provides real-time health analysis for your React components. It helps you write cleaner, more maintainable code by analyzing various metrics and providing intelligent suggestions.
 
@@ -172,7 +172,7 @@ Component Health provides context-aware suggestions:
 
 ## 📝 Release Notes
 
-### 0.2.3
+### 1.0.0
 
 - ✨ Added real-time health scoring system
 - 🎨 Implemented interactive status bar with tooltips
