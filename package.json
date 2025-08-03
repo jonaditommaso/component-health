@@ -4,7 +4,7 @@
   "publisher": "jonaditommaso",
   "description": "",
   "version": "0.2.3",
-  "icon": "images/heart-white.png",
+  "icon": "images/logo.png",
   "engines": {
     "vscode": "^1.87.0"
   },
@@ -15,7 +15,12 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact"
+  ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
@@ -27,6 +32,43 @@
           "light": "images/heart-black.png",
           "dark": "images/heart-white.png"
         }
+      },
+      {
+        "command": "component-health.toggleMetricsPanel",
+        "title": "Toggle Component Health Metrics",
+        "icon": "$(heart)"
+      },
+      {
+        "command": "component-health.toggle.enableUseEffectView",
+        "title": "Toggle UseEffect Count"
+      },
+      {
+        "command": "component-health.toggle.enableUseStateView",
+        "title": "Toggle UseState Count"
+      },
+      {
+        "command": "component-health.toggle.enableFunctionalComponentsView",
+        "title": "Toggle Functional Components"
+      },
+      {
+        "command": "component-health.toggle.enableInternalFunctionsView",
+        "title": "Toggle Internal Functions"
+      },
+      {
+        "command": "component-health.toggle.enableConditionalReturnsView",
+        "title": "Toggle Conditional Returns"
+      },
+      {
+        "command": "component-health.toggle.enableJSXNestingView",
+        "title": "Toggle JSX Nesting"
+      },
+      {
+        "command": "component-health.toggle.enableCustomHooksView",
+        "title": "Toggle Custom Hooks"
+      },
+      {
+        "command": "component-health.toggle.enableLinesOfCodeView",
+        "title": "Toggle Lines of Code"
       },
       {
         "command": "component-health.countUseEffect",
@@ -106,6 +148,26 @@
             "type": "boolean",
             "default": true,
             "description": "Add counted lines of code to general command"
+          },
+          "componentHealth.enableInternalFunctionsView": {
+            "type": "boolean",
+            "default": true,
+            "description": "Add counted internal functions to general command"
+          },
+          "componentHealth.enableConditionalReturnsView": {
+            "type": "boolean",
+            "default": true,
+            "description": "Add counted conditional returns to general command"
+          },
+          "componentHealth.enableJSXNestingView": {
+            "type": "boolean",
+            "default": true,
+            "description": "Add JSX nesting depth to general command"
+          },
+          "componentHealth.enableCustomHooksView": {
+            "type": "boolean",
+            "default": true,
+            "description": "Add counted custom hooks to general command"
           }
         }
       }
