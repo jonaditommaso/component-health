@@ -45,19 +45,22 @@ function calculateHealth(metrics) {
         health -= excessUseStates * 3;
     }
 
-    // Internal functions penalty (-6 if more than 4)
+    // Internal functions penalty (-6 for each function above the 4th)
     if (internalFunctionsCount > 4) {
-        health -= 6;
+        const excessFunctions = internalFunctionsCount - 4;
+        health -= excessFunctions * 6;
     }
 
-    // Conditional returns penalty (-5 if more than 1)
+    // Conditional returns penalty (-5 for each return above the 1st)
     if (conditionalReturnsCount > 1) {
-        health -= 5;
+        const excessReturns = conditionalReturnsCount - 1;
+        health -= excessReturns * 5;
     }
 
-    // JSX nesting penalty (-6 if more than 4 levels)
+    // JSX nesting penalty (-6 for each level above the 4th)
     if (jsxNestingDepth > 4) {
-        health -= 6;
+        const excessLevels = jsxNestingDepth - 4;
+        health -= excessLevels * 6;
     }
 
     // Custom hooks bonus (+8 for each custom hook)
