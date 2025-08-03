@@ -9,17 +9,16 @@ class MyCodeLensProvider {
 	constructor(message) {
         this.message = message;
         this.registration = undefined;
+        this._onDidChangeCodeLenses = new vscode.EventEmitter();
+        this.onDidChangeCodeLenses = this._onDidChangeCodeLenses.event;
     }
 
     // Method to update the message without recreating the provider
     updateMessage(newMessage) {
         this.message = newMessage;
-        // Trigger a refresh of the CodeLens
-        if (this.registration && vscode.window.activeTextEditor) {
-            vscode.commands.executeCommand('vscode.executeCodeLensProvider',
-                vscode.window.activeTextEditor.document.uri,
-                vscode.CancellationToken.None
-            );
+        // Trigger a refresh of the CodeLens by firing the onDidChangeCodeLenses event
+        if (this.registration && this._onDidChangeCodeLenses) {
+            this._onDidChangeCodeLenses.fire();
         }
     }
 
@@ -48,25 +47,79 @@ class MyCodeLensProvider {
             this.registration.dispose();
 			this.registration = undefined;
         }
+        if (this._onDidChangeCodeLenses) {
+            this._onDidChangeCodeLenses.dispose();
+        }
     }
 }
 
 function activate(context) {
 	let activeCodeLensProvider;
 	let statusBarItem;
+	let updateTimeout; // For debouncing updates
+
+	// Debounced update function to prevent excessive updates
+	const debounceUpdate = (editor, delay = 300) => {
+		if (updateTimeout) {
+			clearTimeout(updateTimeout);
+		}
+
+		updateTimeout = setTimeout(() => {
+			if (editor && editor.document) {
+				const supportedLanguages = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'];
+				if (supportedLanguages.includes(editor.document.languageId)) {
+					const text = editor.document.getText();
+					const fileName = editor.document.fileName;
+
+					const metrics = {
+						linesOfCode: 0,
+						useEffectCount: 0,
+						useStateCount: 0,
+						functionalComponentCount: 0,
+						internalFunctionsCount: 0,
+						conditionalReturnsCount: 0,
+						jsxNestingDepth: 0,
+						customHooksCount: 0
+					};
+
+					metrics.useEffectCount = countFunctionDeclarations(text, 'useEffect', fileName);
+					metrics.useStateCount = countFunctionDeclarations(text, 'useState', fileName);
+					metrics.functionalComponentCount = countFunctionDeclarations(text, 'functionalComponent', fileName);
+					metrics.internalFunctionsCount = countFunctionDeclarations(text, 'internalFunctions', fileName);
+					metrics.conditionalReturnsCount = countFunctionDeclarations(text, 'conditionalReturns', fileName);
+					metrics.jsxNestingDepth = countFunctionDeclarations(text, 'jsxNesting', fileName);
+					metrics.customHooksCount = countFunctionDeclarations(text, 'customHooks', fileName);
+					metrics.linesOfCode = getLines(text, fileName);
+
+					const healthScore = calculateHealth(metrics);
+					updateStatusBar(healthScore);
+
+					// If CodeLens is already visible, update it automatically
+					if (activeCodeLensProvider && activeCodeLensProvider.registration) {
+						console.log('Component Health: CodeLens is visible, updating automatically');
+						updateCodeLens(editor, text, fileName, metrics, healthScore);
+					}
+				}
+			}
+		}, delay);
+	};
 
 	// Create status bar item
 	const createStatusBarItem = () => {
+		console.log('Component Health: Creating status bar item...');
 		statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
 		// Add a dummy command to enable cursor pointer
 		statusBarItem.command = 'component-health.statusBarClick';
 		statusBarItem.tooltip = 'Component Health - Hover to configure metrics';
 		context.subscriptions.push(statusBarItem);
+		console.log('Component Health: Status bar item created successfully');
 	};
 
 	// Update status bar with health score
 	const updateStatusBar = (healthScore) => {
+		console.log('Component Health: updateStatusBar called with score:', healthScore);
 		if (statusBarItem) {
+			console.log('Component Health: Status bar item exists, updating...');
 			// Use heart icon as fallback (we know this works in your extension)
 			statusBarItem.text = `$(heart) ${healthScore}%`;
 			statusBarItem.backgroundColor = undefined; // Reset background
@@ -180,7 +233,11 @@ function activate(context) {
 			tooltip.appendMarkdown(`ℹ️ [How is the health score calculated?](https://marketplace.visualstudio.com/items?itemName=jonaditommaso.component-health "Learn about our scoring algorithm")\n\n`);
 
 			statusBarItem.tooltip = tooltip;
+			console.log('Component Health: About to show status bar item');
 			statusBarItem.show();
+			console.log('Component Health: Status bar item show() called successfully');
+		} else {
+			console.log('Component Health: ERROR - statusBarItem is null/undefined');
 		}
 	};
 
@@ -428,6 +485,8 @@ function activate(context) {
 		});
 
 		const editorChangeListener = vscode.window.onDidChangeActiveTextEditor((editor) => {
+			console.log('Component Health: Editor changed', editor && editor.document ? editor.document.fileName : 'No editor');
+
 			if (!editor) {
 				if (activeCodeLensProvider) {
 					activeCodeLensProvider.unregister();
@@ -438,37 +497,17 @@ function activate(context) {
 				// Check if the file is a supported type (JS/TS/JSX/TSX)
 				const supportedLanguages = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'];
 				if (supportedLanguages.includes(editor.document.languageId)) {
-					// Auto-calculate health score when opening supported files
-					const text = editor.document.getText();
-					const fileName = editor.document.fileName;
+					console.log('Component Health: Processing React file', editor.document.fileName);
 
-					const metrics = {
-						linesOfCode: 0,
-						useEffectCount: 0,
-						useStateCount: 0,
-						functionalComponentCount: 0,
-						internalFunctionsCount: 0,
-						conditionalReturnsCount: 0,
-						jsxNestingDepth: 0,
-						customHooksCount: 0
-					};
-
-					// Always calculate all metrics for health score
-					metrics.useEffectCount = countFunctionDeclarations(text, 'useEffect', fileName);
-					metrics.useStateCount = countFunctionDeclarations(text, 'useState', fileName);
-					metrics.functionalComponentCount = countFunctionDeclarations(text, 'functionalComponent', fileName);
-					metrics.internalFunctionsCount = countFunctionDeclarations(text, 'internalFunctions', fileName);
-					metrics.conditionalReturnsCount = countFunctionDeclarations(text, 'conditionalReturns', fileName);
-					metrics.jsxNestingDepth = countFunctionDeclarations(text, 'jsxNesting', fileName);
-					metrics.customHooksCount = countFunctionDeclarations(text, 'customHooks', fileName);
-					metrics.linesOfCode = getLines(text, fileName);
-
-					const healthScore = calculateHealth(metrics);
-					updateStatusBar(healthScore);
-
-					// Also update CodeLens automatically
-					updateCodeLens(editor, text, fileName, metrics, healthScore);
+					// Use debounce for consistency (this will update CodeLens if it was already visible)
+					debounceUpdate(editor, 100); // Shorter delay for editor changes
 				} else {
+					console.log('Component Health: Not a React file, hiding status bar');
+					// Hide CodeLens when switching to non-React files
+					if (activeCodeLensProvider) {
+						activeCodeLensProvider.unregister();
+						activeCodeLensProvider = undefined;
+					}
 					hideStatusBar();
 				}
 			}
@@ -478,38 +517,9 @@ function activate(context) {
 		const documentChangeListener = vscode.workspace.onDidChangeTextDocument((event) => {
 			const editor = vscode.window.activeTextEditor;
 			if (editor && event.document === editor.document) {
-				const supportedLanguages = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'];
-				if (supportedLanguages.includes(editor.document.languageId)) {
-					// Recalculate health score on document changes
-					const text = editor.document.getText();
-					const fileName = editor.document.fileName;
-
-					const metrics = {
-						linesOfCode: 0,
-						useEffectCount: 0,
-						useStateCount: 0,
-						functionalComponentCount: 0,
-						internalFunctionsCount: 0,
-						conditionalReturnsCount: 0,
-						jsxNestingDepth: 0,
-						customHooksCount: 0
-					};
-
-					metrics.useEffectCount = countFunctionDeclarations(text, 'useEffect', fileName);
-					metrics.useStateCount = countFunctionDeclarations(text, 'useState', fileName);
-					metrics.functionalComponentCount = countFunctionDeclarations(text, 'functionalComponent', fileName);
-					metrics.internalFunctionsCount = countFunctionDeclarations(text, 'internalFunctions', fileName);
-					metrics.conditionalReturnsCount = countFunctionDeclarations(text, 'conditionalReturns', fileName);
-					metrics.jsxNestingDepth = countFunctionDeclarations(text, 'jsxNesting', fileName);
-					metrics.customHooksCount = countFunctionDeclarations(text, 'customHooks', fileName);
-					metrics.linesOfCode = getLines(text, fileName);
-
-					const healthScore = calculateHealth(metrics);
-					updateStatusBar(healthScore);
-
-					// Also update CodeLens automatically
-					updateCodeLens(editor, text, fileName, metrics, healthScore);
-				}
+				console.log('Component Health: Document changed, debouncing update...');
+				// Use debounce to prevent excessive updates
+				debounceUpdate(editor, 500);
 			}
 		});
 
@@ -585,94 +595,22 @@ function activate(context) {
 	registerCommands();
 	createStatusBarItem();
 
-	// Better initialization strategy - wait for VS Code to be fully ready
-	const initializeHealthScore = () => {
-		const currentEditor = vscode.window.activeTextEditor;
-		if (currentEditor && statusBarItem) {
-			const supportedLanguages = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'];
-			if (supportedLanguages.includes(currentEditor.document.languageId)) {
-				// Ensure document is fully loaded
-				if (currentEditor.document.getText().length > 0) {
-					const text = currentEditor.document.getText();
-					const fileName = currentEditor.document.fileName;
-
-					const metrics = {
-						linesOfCode: 0,
-						useEffectCount: 0,
-						useStateCount: 0,
-						functionalComponentCount: 0,
-						internalFunctionsCount: 0,
-						conditionalReturnsCount: 0,
-						jsxNestingDepth: 0,
-						customHooksCount: 0
-					};
-
-					metrics.useEffectCount = countFunctionDeclarations(text, 'useEffect', fileName);
-					metrics.useStateCount = countFunctionDeclarations(text, 'useState', fileName);
-					metrics.functionalComponentCount = countFunctionDeclarations(text, 'functionalComponent', fileName);
-					metrics.internalFunctionsCount = countFunctionDeclarations(text, 'internalFunctions', fileName);
-					metrics.conditionalReturnsCount = countFunctionDeclarations(text, 'conditionalReturns', fileName);
-					metrics.jsxNestingDepth = countFunctionDeclarations(text, 'jsxNesting', fileName);
-					metrics.customHooksCount = countFunctionDeclarations(text, 'customHooks', fileName);
-					metrics.linesOfCode = getLines(text, fileName);
-
-					const healthScore = calculateHealth(metrics);
-					updateStatusBar(healthScore);
-
-					// Also initialize CodeLens
-					updateCodeLens(currentEditor, text, fileName, metrics, healthScore);
-
-					return true; // Successfully initialized
-				}
-			}
+	// Immediate initialization when extension activates
+	console.log('Component Health: Extension activated, checking for active editor');
+	const activeEditor = vscode.window.activeTextEditor;
+	if (activeEditor) {
+		console.log('Component Health: Found active editor on startup:', activeEditor.document.fileName);
+		const supportedLanguages = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'];
+		if (supportedLanguages.includes(activeEditor.document.languageId)) {
+			console.log('Component Health: Active editor is React file, initializing immediately');
+			// Use debounce for consistent behavior
+			debounceUpdate(activeEditor, 100);
+		} else {
+			console.log('Component Health: Active editor is not a React file');
 		}
-		return false; // Not ready yet
-	};
-
-	// Use VS Code's onDidChangeActiveTextEditor to ensure proper initialization
-	// This ensures we initialize when VS Code is actually ready
-	const immediateInit = () => {
-		if (initializeHealthScore()) {
-			return; // Success, no need to continue
-		}
-
-		// If immediate init fails, try a few more times with delays
-		let attempts = 0;
-		const maxAttempts = 8;
-		const retryInit = () => {
-			attempts++;
-			if (initializeHealthScore() || attempts >= maxAttempts) {
-				return; // Success or max attempts reached
-			}
-			// Progressive delay: 500ms, 1000ms, 2000ms, etc.
-			setTimeout(retryInit, 500 * attempts);
-		};
-
-		setTimeout(retryInit, 500);
-	};
-
-	// Try immediate initialization
-	setTimeout(immediateInit, 100);
-
-	// Also try when the extension host is fully ready
-	setTimeout(immediateInit, 1000);
-	setTimeout(immediateInit, 2000);
-
-	// Add listener for when a React file is opened later
-	const activeTextEditorListener = vscode.window.onDidChangeActiveTextEditor((editor) => {
-		if (!statusBarItem || !statusBarItem.text) {
-			// Status bar not initialized yet, try to initialize
-			if (editor) {
-				const supportedLanguages = ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'];
-				if (supportedLanguages.includes(editor.document.languageId)) {
-					console.log('Component Health: React file opened, initializing status bar');
-					initializeHealthScore();
-				}
-			}
-		}
-	});
-
-	context.subscriptions.push(activeTextEditorListener);
+	} else {
+		console.log('Component Health: No active editor on startup');
+	}
 }
 
 // This method is called when your extension is deactivated
