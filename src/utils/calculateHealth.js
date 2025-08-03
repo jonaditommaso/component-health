@@ -7,12 +7,24 @@
  * @param {number} metrics.useEffectCount - Number of useEffect hooks
  * @param {number} metrics.useStateCount - Number of useState hooks
  * @param {number} metrics.functionalComponentCount - Number of functional components
+ * @param {number} metrics.internalFunctionsCount - Number of internal functions
+ * @param {number} metrics.conditionalReturnsCount - Number of conditional returns
+ * @param {number} metrics.jsxNestingDepth - Maximum JSX nesting depth
+ * @param {number} metrics.customHooksCount - Number of custom hooks
  * @returns {number} Health score (minimum 1, maximum 100)
  */
 function calculateHealth(metrics) {
     let health = 100;
 
-    const { linesOfCode, useEffectCount, useStateCount } = metrics;
+    const {
+        linesOfCode,
+        useEffectCount,
+        useStateCount,
+        internalFunctionsCount,
+        conditionalReturnsCount,
+        jsxNestingDepth,
+        customHooksCount
+    } = metrics;
 
     // Lines of code penalties
     if (linesOfCode > 1000) {
@@ -33,8 +45,26 @@ function calculateHealth(metrics) {
         health -= excessUseStates * 3;
     }
 
-    // Ensure minimum health is 1
-    return Math.max(1, health);
+    // Internal functions penalty (-6 if more than 4)
+    if (internalFunctionsCount > 4) {
+        health -= 6;
+    }
+
+    // Conditional returns penalty (-5 if more than 1)
+    if (conditionalReturnsCount > 1) {
+        health -= 5;
+    }
+
+    // JSX nesting penalty (-6 if more than 4 levels)
+    if (jsxNestingDepth > 4) {
+        health -= 6;
+    }
+
+    // Custom hooks bonus (+8 for each custom hook)
+    health += customHooksCount * 8;
+
+    // Ensure minimum health is 1 and maximum is 100
+    return Math.max(1, Math.min(100, health));
 }
 
 module.exports = {

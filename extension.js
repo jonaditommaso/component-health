@@ -51,6 +51,10 @@ function activate(context) {
 				useEffect: worspaceConfig.get("enableUseEffectView"),
 				useState: worspaceConfig.get("enableUseStateView"),
 				functionalComponent: worspaceConfig.get("enableFunctionalComponentsView"),
+				internalFunctions: worspaceConfig.get("enableInternalFunctionsView"),
+				conditionalReturns: worspaceConfig.get("enableConditionalReturnsView"),
+				jsxNesting: worspaceConfig.get("enableJSXNestingView"),
+				customHooks: worspaceConfig.get("enableCustomHooksView"),
 			};
 
 
@@ -63,7 +67,11 @@ function activate(context) {
 					linesOfCode: 0,
 					useEffectCount: 0,
 					useStateCount: 0,
-					functionalComponentCount: 0
+					functionalComponentCount: 0,
+					internalFunctionsCount: 0,
+					conditionalReturnsCount: 0,
+					jsxNestingDepth: 0,
+					customHooksCount: 0
 				};
 
 				functionInfos.forEach((functionInfo, index) => {
@@ -73,7 +81,7 @@ function activate(context) {
 					}
 
 					const hookCount = countFunctionDeclarations(text, functionInfo.name, fileName);
-
+					
 					// Store metrics for health calculation
 					if (functionInfo.name === 'useEffect') {
 						metrics.useEffectCount = hookCount;
@@ -81,15 +89,21 @@ function activate(context) {
 						metrics.useStateCount = hookCount;
 					} else if (functionInfo.name === 'functionalComponent') {
 						metrics.functionalComponentCount = hookCount;
+					} else if (functionInfo.name === 'internalFunctions') {
+						metrics.internalFunctionsCount = hookCount;
+					} else if (functionInfo.name === 'conditionalReturns') {
+						metrics.conditionalReturnsCount = hookCount;
+					} else if (functionInfo.name === 'jsxNesting') {
+						metrics.jsxNestingDepth = hookCount;
+					} else if (functionInfo.name === 'customHooks') {
+						metrics.customHooksCount = hookCount;
 					}
 
 					message += `${functionInfo.message} ${hookCount}`;
 					if (index < functionInfos.length - 1) {
 						message += ' | ';
 					}
-				});
-
-				if (worspaceConfig.get("enableLinesOfCodeView")) {
+				});				if (worspaceConfig.get("enableLinesOfCodeView")) {
 					const linesOfCode = getLines(text, fileName);
 					metrics.linesOfCode = linesOfCode;
 					message += ` | Code lines: ${linesOfCode}`;

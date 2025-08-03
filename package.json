@@ -106,6 +106,26 @@
             "type": "boolean",
             "default": true,
             "description": "Add counted lines of code to general command"
+          },
+          "componentHealth.enableInternalFunctionsView": {
+            "type": "boolean",
+            "default": true,
+            "description": "Add counted internal functions to general command"
+          },
+          "componentHealth.enableConditionalReturnsView": {
+            "type": "boolean",
+            "default": true,
+            "description": "Add counted conditional returns to general command"
+          },
+          "componentHealth.enableJSXNestingView": {
+            "type": "boolean",
+            "default": true,
+            "description": "Add JSX nesting depth to general command"
+          },
+          "componentHealth.enableCustomHooksView": {
+            "type": "boolean",
+            "default": true,
+            "description": "Add counted custom hooks to general command"
           }
         }
       }
