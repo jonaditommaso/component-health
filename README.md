@@ -199,9 +199,13 @@ Found a bug or have a feature request?
 
 Component Health was created to help React developers write cleaner, more maintainable code by providing instant feedback and actionable insights directly in Visual Studio Code. The extension is designed to be intuitive, customizable, and seamlessly integrated into your workflow.
 
-## 🙏 Acknowledgments
+## � License
 
-Built with ❤️ for the React development community.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## �🙏 Acknowledgments
+
+Special thanks to the open-source community and all React developers whose feedback and best practices inspired the features and improvements in this project.
 
 ---
 
