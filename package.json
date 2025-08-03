@@ -4,7 +4,7 @@
   "publisher": "jonaditommaso",
   "description": "",
   "version": "0.2.3",
-  "icon": "images/heart-white.png",
+  "icon": "images/logo.png",
   "engines": {
     "vscode": "^1.87.0"
   },
